@@ -19,7 +19,6 @@
         .points-value { font-size: 2rem; font-weight: 800; color: #ffd966; }
         .logout-btn { background: rgba(255, 70, 85, 0.2); border: 1px solid #ff5e7a; padding: 0.5rem 1.2rem; border-radius: 2rem; color: #ffb3be; cursor: pointer; }
         
-        /* Stats Slider */
         .stats-container { margin-bottom: 1.5rem; }
         .stats-toggle { background: #1e293b; border: none; padding: 0.6rem 1.2rem; border-radius: 2rem; color: #ffb347; cursor: pointer; font-weight: bold; width: 100%; text-align: center; }
         .stats-panel { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; background: rgba(0, 0, 0, 0.4); border-radius: 1.5rem; margin-top: 0.5rem; }
@@ -29,7 +28,6 @@
         .stat-label { font-size: 0.7rem; color: #8f9bb5; text-transform: uppercase; }
         .stat-value { font-size: 1.4rem; font-weight: bold; color: #ffd966; }
         
-        /* Bet Card */
         .bet-card { background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 2rem; padding: 2rem; text-align: center; border: 2px solid #9146ff; margin-bottom: 2rem; }
         .bet-title { font-size: 2rem; font-weight: bold; color: white; margin-bottom: 0.5rem; }
         .bet-description { color: #a9b6e0; margin-bottom: 1.5rem; font-style: italic; }
@@ -37,12 +35,11 @@
         .bet-amount { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: center; }
         .bet-amount label { color: #ffd966; font-weight: bold; }
         .bet-amount input { background: #0f172a; border: 2px solid #9146ff; padding: 0.5rem 1rem; border-radius: 2rem; color: white; font-size: 1.2rem; width: 120px; text-align: center; }
-        .multiplier-badge { background: transparent; padding: 0.3rem 1rem; border-radius: 2rem; font-size: 1.2rem; font-weight: bold; color: #ffd966; border: 1px solid #9146ff; }
+        .multiplier-badge { background: #9146ff; padding: 0.3rem 1rem; border-radius: 2rem; font-size: 1.2rem; font-weight: bold; color: white; }
         .place-bet-btn { background: #9146ff; border: none; padding: 0.8rem 2rem; border-radius: 3rem; font-size: 1.2rem; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; }
         .place-bet-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #4a4a6a; }
         .pending-bet-info { background: #ffb34720; padding: 0.5rem; border-radius: 1rem; margin-top: 1rem; color: #ffb347; }
         
-        /* Admin Panel - Bet List */
         .admin-section { margin-top: 2rem; padding: 1.5rem; background: rgba(0, 0, 0, 0.5); border-radius: 1.5rem; border: 1px solid #ffb347; }
         .admin-title { color: #ffb347; font-size: 1.3rem; margin-bottom: 1rem; font-weight: bold; text-align: center; }
         .bets-list { display: flex; flex-direction: column; gap: 0.8rem; max-height: 400px; overflow-y: auto; }
@@ -51,7 +48,6 @@
         .bet-viewer { font-weight: bold; color: white; font-size: 1.1rem; }
         .bet-details { font-size: 0.8rem; color: #a9b6e0; }
         .bet-points { color: #ffd966; font-weight: bold; }
-        .bet-actions { display: flex; gap: 0.8rem; }
         .global-win-btn { background: #10b981; border: none; padding: 0.8rem 2rem; border-radius: 2rem; color: white; cursor: pointer; font-weight: bold; font-size: 1rem; margin-bottom: 1rem; width: 100%; }
         .global-lose-btn { background: #ef4444; border: none; padding: 0.8rem 2rem; border-radius: 2rem; color: white; cursor: pointer; font-weight: bold; font-size: 1rem; margin-bottom: 1rem; width: 100%; }
         .global-buttons { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
@@ -70,7 +66,7 @@
         <div style="font-size: 3rem;">🎡</div>
         <h2 style="color: white;">Yosuke's Gambling Addicts</h2>
         <p style="color: #b9c3ff;">Connect your Twitch account to gamble your points away :D</p>
-        <button id="twitchLoginBtn" class="twitch-btn">TWITCH LOGIN</button>
+        <button id="twitchLoginBtn" class="twitch-btn">🔐 TWITCH LOGIN 🔐</button>
         <div id="loginMessage" style="margin-top: 1rem; color: #b9c3ff;"></div>
     </div>
 
@@ -80,14 +76,13 @@
                 <img id="userAvatar" class="avatar" src="">
                 <div>
                     <div class="username" id="userDisplayName"></div>
-                    <div style="font-size: 0.75rem; color:#8f9bb5;"><span id="userLogin"></span><span class="admin-only-badge">✨Gambling Addict✨</span></div>
+                    <div style="font-size: 0.75rem; color:#8f9bb5;"><span id="userLogin"></span><span class="admin-only-badge">✨Points✨</span></div>
                 </div>
             </div>
-            <div class="points-card"><span>🌟 Your Twitch Points: </span><span class="points-value" id="pointsAmount">0</span></div>
+            <div class="points-card"><span>🎲 POINTS</span><span class="points-value" id="pointsAmount">0</span></div>
             <button id="logoutBtn" class="logout-btn">🚪 Disconnect</button>
         </div>
 
-        <!-- Stats Slider -->
         <div class="stats-container">
             <button id="statsToggleBtn" class="stats-toggle">📊 View Statistics ▼</button>
             <div id="statsPanel" class="stats-panel">
@@ -100,7 +95,6 @@
             </div>
         </div>
 
-        <!-- Bet Card (Viewers see this) -->
         <div class="bet-card">
             <div class="bet-title">🎡 WHEEL OF FORTUNE 🎡</div>
             <div class="bet-description">"Place your bet and hope the wheel lands in your favor! 24x multiplier on win!✨"</div>
@@ -115,7 +109,6 @@
             <div id="pendingBetInfo" class="pending-bet-info" style="display: none;">⏳ You have a pending bet! Waiting for streamer to resolve the Bet ⏳</div>
         </div>
 
-        <!-- Admin Panel - Shows All Pending Bets -->
         <div id="adminSection" class="admin-section" style="display: none;">
             <div class="admin-title">🔐 ADMIN CONTROL PANEL — PENDING BETS</div>
             <div class="global-buttons">
@@ -136,7 +129,6 @@
     const TWITCH_CLIENT_ID = "dxswtl8r959ihaqh4p17vpjmb19nos";
     const REDIRECT_URI = "https://yosuketv.github.io/YosukeTV/";
     const ADMIN_USERNAME = "yosuketv";
-    const BOTRIX_BID = "fgMhJa9/7J06PwfKOA7Ayg";
     
     let currentUser = null;
     let currentPoints = 0;
@@ -153,7 +145,6 @@
         const saved = localStorage.getItem('botrix_user');
         if (saved) {
             const data = JSON.parse(saved);
-            // Session expires after 24 hours
             if (Date.now() - data.timestamp < 24 * 60 * 60 * 1000) {
                 return { user: data.user, token: data.token };
             }
@@ -165,16 +156,15 @@
         localStorage.removeItem('botrix_user');
     }
     
-    // ============ API FUNCTIONS ============
     async function getUserData(viewerName) {
         const response = await fetch(`${API_BASE_URL}/api/user/${encodeURIComponent(viewerName)}`);
         return await response.json();
     }
     
-    async function placeBet(userId, viewerName, betAmount) {
+    async function placeBet(userId, viewerName, betAmount, twitchId) {
         const response = await fetch(`${API_BASE_URL}/api/place-bet`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, viewerName, betAmount })
+            body: JSON.stringify({ userId, viewerName, betAmount, twitchId })
         });
         return await response.json();
     }
@@ -204,7 +194,6 @@
         return data.bets || [];
     }
     
-    // ============ TWITCH AUTH ============
     function getTwitchTokenFromUrl() {
         if (window.location.hash) {
             const params = new URLSearchParams(window.location.hash.substring(1));
@@ -221,7 +210,6 @@
         return data.data[0];
     }
     
-    // ============ UI FUNCTIONS ============
     async function updateUserData() {
         if (!currentUser) return;
         const data = await getUserData(currentUser.login);
@@ -267,18 +255,16 @@
             return;
         }
         
-        const result = await placeBet(currentUser.id, currentUser.login, betAmount);
+        const result = await placeBet(currentUser.id, currentUser.login, betAmount, currentUser.id);
         if (result.success) {
             showMessage(`✅ Bet placed! ${betAmount} points deducted. Waiting for streamer to resolve the wheel.`, "info");
             await updateUserData();
-            // Redirect to Twitch channel instead of wheelofnames
             window.open("https://www.twitch.tv/yosuketv", "_blank");
         } else {
             showMessage(result.message || "Failed to place bet", "error");
         }
     }
     
-    // Admin Functions
     async function refreshAdminPanel() {
         if (!isAdmin) return;
         const result = await getPendingBets();
@@ -289,10 +275,10 @@
                 return;
             }
             container.innerHTML = result.bets.map(bet => `
-                <div class="bet-item" data-bet-id="${bet._id}" data-viewer="${bet.viewerName}" data-amount="${bet.betAmount}">
+                <div class="bet-item">
                     <div class="bet-info">
                         <div class="bet-viewer">🎮 ${bet.viewerName}</div>
-                        <div class="bet-details">Bet: <span class="bet-points">${bet.betAmount} points</span> | 24x potential win: ${bet.betAmount * 24} points</div>
+                        <div class="bet-details">Bet: <span class="bet-points">${bet.betAmount} points</span> | 24x win: ${bet.betAmount * 24} points</div>
                         <div class="bet-details">Placed: ${new Date(bet.createdAt).toLocaleTimeString()}</div>
                     </div>
                 </div>
@@ -342,7 +328,6 @@
         currentUser = user;
         isAdmin = user.login.toLowerCase() === ADMIN_USERNAME.toLowerCase();
         
-        // Save session
         saveUserSession(user, token);
         
         document.getElementById('loginWall').style.display = 'none';
@@ -372,7 +357,6 @@
     }
     
     async function init() {
-        // Check for token in URL first
         const token = getTwitchTokenFromUrl();
         if (token) {
             try {
@@ -383,7 +367,6 @@
             } catch (err) { console.log('Token login failed'); }
         }
         
-        // Check for saved session
         const savedSession = loadUserSession();
         if (savedSession && savedSession.token) {
             try {
