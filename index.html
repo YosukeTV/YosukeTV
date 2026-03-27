@@ -15,9 +15,13 @@
         .user-info { display: flex; align-items: center; gap: 15px; }
         .avatar { width: 52px; height: 52px; border-radius: 50%; border: 2px solid #9146ff; }
         .username { font-size: 1.4rem; font-weight: bold; color: #f0f3ff; }
-        .points-card { background: linear-gradient(135deg, #1e293b, #0f172a); padding: 0.7rem 1.6rem; border-radius: 60px; display: flex; align-items: baseline; gap: 10px; border-left: 4px solid #ffb347; }
+        .points-card { background: linear-gradient(135deg, #1e293b, #0f172a); padding: 0.7rem 1.6rem; border-radius: 60px; display: flex; align-items: baseline; gap: 10px; border-left: 4px solid #ffb347; position: relative; }
         .points-value { font-size: 2rem; font-weight: 800; color: #ffd966; }
+        .refresh-indicator { font-size: 0.7rem; color: #8f9bb5; margin-left: 5px; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 0.4; } 100% { opacity: 1; } }
         .logout-btn { background: rgba(255, 70, 85, 0.2); border: 1px solid #ff5e7a; padding: 0.5rem 1.2rem; border-radius: 2rem; color: #ffb3be; cursor: pointer; }
+        .refresh-btn { background: rgba(145, 70, 255, 0.2); border: 1px solid #9146ff; padding: 0.5rem 1.2rem; border-radius: 2rem; color: #b9c3ff; cursor: pointer; transition: 0.2s; }
+        .refresh-btn:hover { background: rgba(145, 70, 255, 0.4); }
         
         .stats-container { margin-bottom: 1.5rem; }
         .stats-toggle { background: #1e293b; border: none; padding: 0.6rem 1.2rem; border-radius: 2rem; color: #ffb347; cursor: pointer; font-weight: bold; width: 100%; text-align: center; }
@@ -35,7 +39,7 @@
         .bet-amount { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: center; }
         .bet-amount label { color: #ffd966; font-weight: bold; }
         .bet-amount input { background: #0f172a; border: 2px solid #9146ff; padding: 0.5rem 1rem; border-radius: 2rem; color: white; font-size: 1.2rem; width: 120px; text-align: center; }
-        .multiplier-badge { background: #9146ff; padding: 0.3rem 1rem; border-radius: 2rem; font-size: 1.2rem; font-weight: bold; color: white; }
+        .multiplier-badge { background: none; padding: 0.3rem 1rem; font-size: 1.2rem; font-weight: bold; color: #ffd966; }
         .place-bet-btn { background: #9146ff; border: none; padding: 0.8rem 2rem; border-radius: 3rem; font-size: 1.2rem; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; }
         .place-bet-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #4a4a6a; }
         .pending-bet-info { background: #ffb34720; padding: 0.5rem; border-radius: 1rem; margin-top: 1rem; color: #ffb347; }
@@ -66,7 +70,7 @@
         <div style="font-size: 3rem;">🎡</div>
         <h2 style="color: white;">Yosuke's Gambling Addicts</h2>
         <p style="color: #b9c3ff;">Connect your Twitch account to gamble your points away :D</p>
-        <button id="twitchLoginBtn" class="twitch-btn">🔐 TWITCH LOGIN 🔐</button>
+        <button id="twitchLoginBtn" class="twitch-btn"> TWITCH LOGIN </button>
         <div id="loginMessage" style="margin-top: 1rem; color: #b9c3ff;"></div>
     </div>
 
@@ -76,11 +80,18 @@
                 <img id="userAvatar" class="avatar" src="">
                 <div>
                     <div class="username" id="userDisplayName"></div>
-                    <div style="font-size: 0.75rem; color:#8f9bb5;"><span id="userLogin"></span><span class="admin-only-badge">✨Points✨</span></div>
+                    <div style="font-size: 0.75rem; color:#8f9bb5;"><span id="userLogin"></span><span class="admin-only-badge">✨Gambling Addict✨</span></div>
                 </div>
             </div>
-            <div class="points-card"><span>🎲 POINTS</span><span class="points-value" id="pointsAmount">0</span></div>
-            <button id="logoutBtn" class="logout-btn">🚪 Disconnect</button>
+            <div class="points-card">
+                <span>🌟YOUR TWITCH POINTS: </span>
+                <span class="points-value" id="pointsAmount">0</span>
+                <span class="refresh-indicator" id="refreshIndicator" style="display: none;">⟳</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button id="manualRefreshBtn" class="refresh-btn">🔄 Refresh</button>
+                <button id="logoutBtn" class="logout-btn">🚪 Disconnect</button>
+            </div>
         </div>
 
         <div class="stats-container">
@@ -120,7 +131,7 @@
             </div>
         </div>
 
-        <div id="notificationMessage" class="message-area">💡 Place a bet (5-100 points) and wait for the streamer to resolve the wheel spin!</div>
+        <div id="notificationMessage" class="message-area">💡 Place a bet (5-100 points) and wait for Yosuke to resolve the wheel spin!</div>
     </div>
 </div>
 
@@ -135,8 +146,9 @@
     let hasPendingBet = false;
     let isAdmin = false;
     let refreshInterval = null;
+    let autoRefreshInterval = null;
     
-    // Save user session in localStorage
+    // Save user session
     function saveUserSession(user, token) {
         localStorage.setItem('botrix_user', JSON.stringify({ user, token, timestamp: Date.now() }));
     }
@@ -210,19 +222,49 @@
         return data.data[0];
     }
     
-    async function updateUserData() {
+    // Main function to update points - shows loading indicator
+    async function updateUserData(showLoading = false) {
         if (!currentUser) return;
-        const data = await getUserData(currentUser.login);
-        if (data && data.success) {
-            currentPoints = data.points;
-            document.getElementById('pointsAmount').innerText = currentPoints;
-            if (data.stats) {
-                document.getElementById('statLevel').innerText = data.stats.level;
-                document.getElementById('statWatchtime').innerText = data.stats.watchtime;
-                document.getElementById('statXp').innerText = data.stats.xp;
-                document.getElementById('statFollowage').innerText = data.stats.followage === -1 ? 'Not following' : data.stats.followage;
+        
+        if (showLoading) {
+            const indicator = document.getElementById('refreshIndicator');
+            indicator.style.display = 'inline-block';
+        }
+        
+        try {
+            const data = await getUserData(currentUser.login);
+            if (data && data.success) {
+                const oldPoints = currentPoints;
+                currentPoints = data.points;
+                const pointsElement = document.getElementById('pointsAmount');
+                pointsElement.innerText = currentPoints;
+                
+                // Flash animation if points changed
+                if (oldPoints !== currentPoints) {
+                    pointsElement.style.animation = 'none';
+                    pointsElement.offsetHeight;
+                    pointsElement.style.animation = 'pulse 0.5s ease';
+                    setTimeout(() => { pointsElement.style.animation = ''; }, 500);
+                }
+                
+                if (data.stats) {
+                    document.getElementById('statLevel').innerText = data.stats.level;
+                    document.getElementById('statWatchtime').innerText = data.stats.watchtime;
+                    document.getElementById('statXp').innerText = data.stats.xp;
+                    document.getElementById('statFollowage').innerText = data.stats.followage === -1 ? 'Not following' : data.stats.followage;
+                }
+            }
+        } catch (error) {
+            console.error('Error updating points:', error);
+        } finally {
+            if (showLoading) {
+                setTimeout(() => {
+                    const indicator = document.getElementById('refreshIndicator');
+                    indicator.style.display = 'none';
+                }, 500);
             }
         }
+        
         await checkUserPendingBet();
     }
     
@@ -230,14 +272,33 @@
         if (!currentUser) return;
         const bets = await getUserBets(currentUser.id);
         const pending = bets.find(b => b.status === 'pending');
+        const oldHasPendingBet = hasPendingBet;
         hasPendingBet = !!pending;
         
         if (hasPendingBet) {
             document.getElementById('pendingBetInfo').style.display = 'block';
             document.getElementById('placeBetBtn').disabled = true;
+            
+            // Start auto-refresh if user has pending bet
+            if (!autoRefreshInterval) {
+                autoRefreshInterval = setInterval(() => {
+                    updateUserData(false);
+                }, 3000); // Refresh every 3 seconds while waiting
+            }
         } else {
             document.getElementById('pendingBetInfo').style.display = 'none';
             document.getElementById('placeBetBtn').disabled = false;
+            
+            // Stop auto-refresh if no pending bet
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+        
+        // If pending bet was just resolved, show a message
+        if (oldHasPendingBet && !hasPendingBet) {
+            showMessage(`✅ Your bet has been resolved! Your new balance is ${currentPoints} points.`, "info");
         }
     }
     
@@ -258,7 +319,7 @@
         const result = await placeBet(currentUser.id, currentUser.login, betAmount, currentUser.id);
         if (result.success) {
             showMessage(`✅ Bet placed! ${betAmount} points deducted. Waiting for streamer to resolve the wheel.`, "info");
-            await updateUserData();
+            await updateUserData(true);
             window.open("https://www.twitch.tv/yosuketv", "_blank");
         } else {
             showMessage(result.message || "Failed to place bet", "error");
@@ -291,7 +352,7 @@
         if (result.success) {
             showMessage(`🎉 ${result.message}`, "win");
             await refreshAdminPanel();
-            await updateUserData();
+            await updateUserData(true); // Force refresh for current user
         } else {
             showMessage(result.message || "Failed to process wins", "error");
         }
@@ -302,7 +363,7 @@
         if (result.success) {
             showMessage(`💀 ${result.message}`, "lose");
             await refreshAdminPanel();
-            await updateUserData();
+            await updateUserData(true); // Force refresh for current user
         } else {
             showMessage(result.message || "Failed to process losses", "error");
         }
@@ -343,12 +404,13 @@
             refreshInterval = setInterval(refreshAdminPanel, 5000);
         }
         
-        await updateUserData();
+        await updateUserData(true);
         setupStatsSlider();
     }
     
     function logout() {
         if (refreshInterval) clearInterval(refreshInterval);
+        if (autoRefreshInterval) clearInterval(autoRefreshInterval);
         currentUser = null; isAdmin = false;
         clearUserSession();
         document.getElementById('dashboard').style.display = 'none';
@@ -384,6 +446,7 @@
     document.getElementById('placeBetBtn').onclick = handlePlaceBet;
     document.getElementById('globalWinBtn').onclick = handleGlobalWin;
     document.getElementById('globalLoseBtn').onclick = handleGlobalLoss;
+    document.getElementById('manualRefreshBtn').onclick = () => updateUserData(true);
     
     init();
 </script>
