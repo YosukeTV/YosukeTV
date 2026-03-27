@@ -29,7 +29,6 @@
             border-radius: 3rem;
             padding: 1.8rem;
             box-shadow: 0 25px 45px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(88, 130, 255, 0.15);
-            transition: all 0.2s ease;
         }
 
         .login-wall {
@@ -39,7 +38,6 @@
             padding: 2.5rem 2rem;
             text-align: center;
             border: 1px solid rgba(145, 180, 255, 0.3);
-            box-shadow: 0 20px 35px rgba(0,0,0,0.5);
         }
 
         .twitch-btn {
@@ -63,11 +61,6 @@
             transform: translateY(-2px);
             background: #a05eff;
             box-shadow: 0 8px 0 #5a2bbf;
-        }
-
-        .twitch-btn:active {
-            transform: translateY(3px);
-            box-shadow: 0 3px 0 #5a2bbf;
         }
 
         .login-status {
@@ -134,7 +127,6 @@
             font-size: 2rem;
             font-weight: 800;
             color: #ffd966;
-            letter-spacing: 1px;
         }
 
         .logout-btn {
@@ -145,12 +137,6 @@
             color: #ffb3be;
             cursor: pointer;
             font-weight: 600;
-            transition: 0.2s;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255, 70, 85, 0.5);
-            color: white;
         }
 
         .pools-title {
@@ -158,9 +144,6 @@
             font-weight: 700;
             margin: 1.5rem 0 1rem 0;
             color: #e2eaff;
-            display: flex;
-            align-items: center;
-            gap: 12px;
         }
 
         .pools-grid {
@@ -172,16 +155,14 @@
 
         .pool-card {
             background: rgba(25, 32, 55, 0.8);
-            backdrop-filter: blur(4px);
             border-radius: 1.8rem;
             padding: 1.5rem;
             border: 1px solid rgba(145, 180, 255, 0.25);
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s;
         }
 
         .pool-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
             border-color: #9146ff80;
         }
 
@@ -224,19 +205,16 @@
             color: #e2e8ff;
             margin-top: 0.8rem;
             cursor: pointer;
-            transition: 0.2s;
             font-size: 1rem;
         }
 
         .enter-btn:enabled {
             background: #9146ff;
             color: white;
-            box-shadow: 0 2px 8px rgba(145, 70, 255, 0.4);
         }
 
         .enter-btn:enabled:hover {
             background: #a259ff;
-            transform: scale(0.98);
         }
 
         .enter-btn:disabled {
@@ -259,12 +237,6 @@
             text-align: center;
             color: white;
             padding: 2rem;
-            font-size: 1.2rem;
-        }
-
-        hr {
-            border-color: #2a2f4b;
-            margin: 1rem 0;
         }
 
         @media (max-width: 680px) {
@@ -280,29 +252,29 @@
 </head>
 <body>
 
-<div class="app-container" id="appContainer">
+<div class="app-container">
     <!-- LOGIN WALL -->
     <div id="loginWall" class="login-wall">
         <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎮</div>
         <h2 style="color: white; margin-bottom: 0.5rem;">BotRix Arena</h2>
-        <p style="color: #b9c3ff; max-width: 380px; margin: 0 auto 1rem auto;">Connect your Twitch account to view your REAL BotRix points & join exclusive pools.</p>
+        <p style="color: #b9c3ff; max-width: 380px; margin: 0 auto 1rem auto;">Connect your Twitch account to access your REAL BotRix points</p>
         <button id="twitchLoginBtn" class="twitch-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="white">
                 <path d="M11.571 4.714h1.715v5.143h-1.715V4.714zm4.715 0H18v5.143h-1.714V4.714zM6 0L2.571 3.429v17.142h4.286V24l3.429-3.429h3.429L21.429 12V0H6zm13.714 11.143L16.286 15H12L9 18V15H5.143V2.571h14.571v8.572z"/>
             </svg>
             LOGIN WITH TWITCH
         </button>
-        <div id="loginMessage" class="login-status">🔒 Login to access your BotRix points (saved in database)</div>
+        <div id="loginMessage" class="login-status">🔒 Login to access your BotRix points</div>
     </div>
 
-    <!-- MAIN DASHBOARD -->
+    <!-- DASHBOARD -->
     <div id="dashboard" class="dashboard">
         <div class="user-header">
             <div class="user-info">
-                <img id="userAvatar" class="avatar" src="https://static-cdn.jtvnw.net/user-default-pictures-75305d54-c7cc-40d1-bb9c-91fbe85943bd-profile_image-300x300.png" alt="avatar">
+                <img id="userAvatar" class="avatar" src="">
                 <div>
-                    <div class="username" id="userDisplayName">Twitch Viewer</div>
-                    <div style="font-size: 0.75rem; color:#8f9bb5;" id="userLogin">@twitch_user</div>
+                    <div class="username" id="userDisplayName"></div>
+                    <div style="font-size: 0.75rem; color:#8f9bb5;" id="userLogin"></div>
                 </div>
             </div>
             <div class="points-card">
@@ -312,61 +284,57 @@
             <button id="logoutBtn" class="logout-btn">🚪 Disconnect</button>
         </div>
 
-        <div class="pools-title">
-            <span>🎯 ACTIVE POOLS</span>
-            <span style="font-size: 0.85rem; background: #1f2a44; padding: 0.2rem 0.8rem; border-radius: 30px;">spend points & win</span>
-        </div>
-        <div class="pools-grid" id="poolsContainer">
+        <div class="pools-title">🎯 ACTIVE POOLS</div>
+        <div id="poolsContainer" class="pools-grid">
             <div class="loading">Loading pools...</div>
         </div>
         <div id="notificationMessage" class="message-area">
-            💡 Welcome to BotRix! Your points are saved in our REAL database and sync across devices.
+            💡 Welcome to BotRix! Your points are saved in our REAL database.
         </div>
     </div>
 </div>
 
 <script>
     // ============================================================
-    // 🔴🔴🔴 IMPORTANT: YOU MUST CHANGE THESE 2 VALUES BELOW 🔴🔴🔴
+    // 🔴 YOU MUST CHANGE THESE 2 VALUES BELOW 🔴
     // ============================================================
     
-    // 1️⃣ CHANGE THIS: Your Render.com API URL (from step 4)
-    //    Example: "https://botrix-api.onrender.com"
-    const API_BASE_URL = "https://botrix-api.onrender.com";  // <--- REPLACE THIS
+    // 1️⃣ YOUR RENDER.COM API URL (from your deployed backend)
+    const API_BASE_URL = "https://botrix-api.onrender.com";  // <--- CHANGE THIS
     
-    // 2️⃣ CHANGE THIS: Your Twitch Client ID (from Twitch Developer Console)
-    //    Example: "abc123def456ghi789"
-    const TWITCH_CLIENT_ID = "dxswtl8r959ihaqh4p17vpjmb19nos";  // <--- REPLACE THIS
+    // 2️⃣ YOUR TWITCH CLIENT ID (from Twitch Developer Console)
+    const TWITCH_CLIENT_ID = "dxswtl8r959ihaqh4p17vpjmb19nos";  // <--- CHANGE THIS
     
     // ============================================================
-    // NO NEED TO CHANGE ANYTHING BELOW THIS LINE
+    // NOTHING ELSE NEEDS TO BE CHANGED
     // ============================================================
     
-    const REDIRECT_URI = window.location.href.split('?')[0].split('#')[0];
+    // Get the base URL without any fragments or queries
+    const getBaseUrl = () => {
+        return window.location.href.split('?')[0].split('#')[0];
+    };
     
-    // Predefined pools
+    const REDIRECT_URI = getBaseUrl();
+    
     const AVAILABLE_POOLS = [
-        { id: "pool_valo", name: "🔫 VALORANT SKINS POOL", description: "Win a random premium skin bundle", cost: 250, active: true },
-        { id: "pool_emote", name: "😎 EMOTE JACKPOT", description: "Custom animated emote + channel points boost", cost: 120, active: true },
-        { id: "pool_gift", name: "🎁 10x GIFTED SUBS", description: "10 Tier 1 gift subs to your favorite streamer", cost: 400, active: true },
-        { id: "pool_arcane", name: "⚡ BOTRIX MYSTERY BOX", description: "Random BotRix surprise (points, badges, more)", cost: 80, active: true }
+        { id: "pool_valo", name: "🔫 VALORANT SKINS POOL", description: "Win a random premium skin bundle", cost: 250 },
+        { id: "pool_emote", name: "😎 EMOTE JACKPOT", description: "Custom animated emote", cost: 120 },
+        { id: "pool_gift", name: "🎁 10x GIFTED SUBS", description: "10 Tier 1 gift subs", cost: 400 },
+        { id: "pool_arcane", name: "⚡ BOTRIX MYSTERY BOX", description: "Random surprise", cost: 80 }
     ];
     
     let currentUser = null;
     
-    // ============ API FUNCTIONS (CONNECTS TO YOUR BACKEND) ============
+    // ============ API FUNCTIONS ============
     
     async function getUserPointsFromAPI(twitchId) {
         try {
-            console.log("Fetching points for user:", twitchId);
             const response = await fetch(`${API_BASE_URL}/api/points/${twitchId}`);
             if (!response.ok) throw new Error("API error");
             const data = await response.json();
-            console.log("Points from API:", data.points);
             return data.points;
         } catch (error) {
             console.error("Error fetching points:", error);
-            document.getElementById('notificationMessage').innerHTML = `⚠️ Cannot connect to API. Make sure your backend is running at: ${API_BASE_URL}`;
             return null;
         }
     }
@@ -381,7 +349,7 @@
             return await response.json();
         } catch (error) {
             console.error("Error joining pool:", error);
-            return { success: false, message: "Network error - check if API is running" };
+            return { success: false, message: "Network error" };
         }
     }
     
@@ -399,9 +367,23 @@
     // ============ TWITCH AUTHENTICATION ============
     
     function getTwitchTokenFromUrl() {
-        const hash = window.location.hash.substring(1);
-        const params = new URLSearchParams(hash);
-        return params.get('access_token');
+        // Check both hash and query params (in case it's in query)
+        let token = null;
+        
+        // Check URL hash (fragment)
+        if (window.location.hash) {
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            token = hashParams.get('access_token');
+        }
+        
+        // Also check query params (some OAuth flows use this)
+        if (!token && window.location.search) {
+            const queryParams = new URLSearchParams(window.location.search);
+            token = queryParams.get('access_token');
+        }
+        
+        console.log("Token found:", token ? "Yes" : "No");
+        return token;
     }
     
     async function fetchTwitchUser(accessToken) {
@@ -411,7 +393,10 @@
                 'Client-Id': TWITCH_CLIENT_ID
             }
         });
-        if (!response.ok) throw new Error("Failed to fetch Twitch user");
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to fetch user: ${response.status} - ${errorText}`);
+        }
         const data = await response.json();
         if (data.data && data.data.length) {
             return data.data[0];
@@ -419,28 +404,22 @@
         throw new Error("No user data");
     }
     
-    // ============ UI UPDATE FUNCTIONS ============
+    // ============ UI FUNCTIONS ============
     
     async function updateDashboard() {
         if (!currentUser) return;
         
-        const container = document.getElementById('poolsContainer');
-        container.innerHTML = '<div class="loading">📡 Fetching your points from BotRix database...</div>';
+        document.getElementById('poolsContainer').innerHTML = '<div class="loading">📡 Loading your points...</div>';
         
-        // Get points from REAL API
         const points = await getUserPointsFromAPI(currentUser.id);
         
         if (points !== null) {
             document.getElementById('pointsAmount').innerText = points;
-            
-            // Get user's entries
             const entries = await getUserEntriesAPI(currentUser.id);
             const enteredPoolIds = entries.map(e => e.poolId);
-            
-            // Render pools
             renderPools(points, enteredPoolIds);
         } else {
-            container.innerHTML = `<div class="loading">⚠️ Cannot connect to BotRix API. Check if your backend is deployed at:<br><code style="background:#000;padding:0.5rem;display:inline-block;margin-top:1rem;">${API_BASE_URL}</code></div>`;
+            document.getElementById('poolsContainer').innerHTML = `<div class="loading">⚠️ Cannot connect to API at: ${API_BASE_URL}<br>Make sure your backend is deployed!</div>`;
         }
     }
     
@@ -449,7 +428,6 @@
         container.innerHTML = '';
         
         for (let pool of AVAILABLE_POOLS) {
-            if (!pool.active) continue;
             const alreadyEntered = enteredPoolIds.includes(pool.id);
             const canJoin = (!alreadyEntered && currentPoints >= pool.cost);
             
@@ -461,106 +439,118 @@
                 <div class="pool-cost">💰 ${pool.cost} points</div>
                 <div class="entry-status">${alreadyEntered ? '✅ Already participated' : '⚡ Not entered yet'}</div>
                 <button class="enter-btn" data-pool-id="${pool.id}" data-cost="${pool.cost}" ${!canJoin ? 'disabled' : ''}>
-                    ${alreadyEntered ? 'ALREADY ENTERED' : (canJoin ? `SPEND ${pool.cost} POINTS & JOIN` : 'NOT ENOUGH POINTS')}
+                    ${alreadyEntered ? 'ALREADY ENTERED' : (canJoin ? `SPEND ${pool.cost} POINTS` : 'NOT ENOUGH POINTS')}
                 </button>
             `;
             container.appendChild(card);
         }
         
-        // Attach event listeners
         document.querySelectorAll('.enter-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 if (!currentUser) return;
                 
                 const poolId = btn.dataset.poolId;
                 const cost = parseInt(btn.dataset.cost);
-                const poolObj = AVAILABLE_POOLS.find(p => p.id === poolId);
-                if (!poolObj) return;
+                const pool = AVAILABLE_POOLS.find(p => p.id === poolId);
                 
                 const msgDiv = document.getElementById('notificationMessage');
-                msgDiv.innerHTML = '⏳ Processing your entry...';
-                btn.disabled = true;
+                msgDiv.innerHTML = '⏳ Processing...';
                 
-                const result = await joinPoolAPI(currentUser.id, poolId, poolObj.name, cost);
+                const result = await joinPoolAPI(currentUser.id, poolId, pool.name, cost);
                 
                 if (result.success) {
                     msgDiv.innerHTML = `🎉 ${result.message} Remaining: ${result.newPoints} points.`;
                     await updateDashboard();
                 } else {
                     msgDiv.innerHTML = `⚠️ ${result.message}`;
-                    btn.disabled = false;
                 }
-                
-                setTimeout(() => {
-                    if (msgDiv.innerHTML.includes(result.message)) {
-                        msgDiv.innerHTML = '💡 Use your BotRix points to join more pools! Points are saved in our database.';
-                    }
-                }, 4000);
             });
         });
     }
     
     async function onLoginSuccess(user) {
+        console.log("Login successful for:", user.display_name);
         currentUser = user;
-        document.getElementById('loginWall').style.display = 'none';
-        const dashboardDiv = document.getElementById('dashboard');
-        dashboardDiv.style.display = 'block';
         
-        // Update user info UI
+        // Hide login wall, show dashboard
+        document.getElementById('loginWall').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        
+        // Update user info
         document.getElementById('userDisplayName').innerText = user.display_name;
         document.getElementById('userLogin').innerText = `@${user.login}`;
-        document.getElementById('userAvatar').src = user.profile_image_url;
+        document.getElementById('userAvatar').src = user.profile_image_url || 'https://static-cdn.jtvnw.net/user-default-pictures-75305d54-c7cc-40d1-bb9c-91fbe85943bd-profile_image-300x300.png';
         
-        // Load points from REAL BotRix API
+        // Load points
         await updateDashboard();
     }
     
     function logout() {
+        console.log("Logging out");
         currentUser = null;
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('loginWall').style.display = 'block';
-        document.getElementById('loginMessage').innerHTML = '🔐 Session ended. Login again to access your BotRix points.';
-        window.location.hash = '';
+        
+        // Clear the URL hash to prevent auto-login on refresh
+        if (window.location.hash) {
+            window.history.replaceState(null, '', window.location.pathname);
+        }
     }
     
     // ============ INITIALIZATION ============
     
     async function init() {
-        console.log("BotRix App Initializing...");
-        console.log("API URL:", API_BASE_URL);
+        console.log("BotRix initializing...");
+        console.log("Current URL:", window.location.href);
         console.log("Redirect URI:", REDIRECT_URI);
+        console.log("API URL:", API_BASE_URL);
         
-        // Check if we have a token in URL
-        const tokenFromHash = getTwitchTokenFromUrl();
-        if (tokenFromHash) {
+        // Check for token in URL
+        const token = getTwitchTokenFromUrl();
+        
+        if (token) {
+            console.log("Token found, authenticating...");
+            document.getElementById('loginMessage').innerHTML = '🔐 Authenticating...';
+            
             try {
-                const userData = await fetchTwitchUser(tokenFromHash);
+                const userData = await fetchTwitchUser(token);
+                console.log("User data received:", userData.login);
+                
                 await onLoginSuccess({
                     id: userData.id,
                     login: userData.login,
                     display_name: userData.display_name,
-                    profile_image_url: userData.profile_image_url || `https://static-cdn.jtvnw.net/user-default-pictures-75305d54-c7cc-40d1-bb9c-91fbe85943bd-profile_image-300x300.png`
+                    profile_image_url: userData.profile_image_url
                 });
+                
+                // Clean URL after successful login
                 window.history.replaceState(null, '', window.location.pathname);
-                return;
-            } catch(err) {
-                console.error("Twitch auth error", err);
-                document.getElementById('loginMessage').innerHTML = '❌ Twitch login failed. Please try again.';
+                
+            } catch (err) {
+                console.error("Auth error:", err);
+                document.getElementById('loginMessage').innerHTML = `❌ Login failed: ${err.message}`;
             }
+        } else {
+            console.log("No token found, showing login screen");
+            document.getElementById('loginWall').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
         }
         
-        // Show login wall
-        document.getElementById('loginWall').style.display = 'block';
-        document.getElementById('dashboard').style.display = 'none';
+        // Setup login button
+        const loginBtn = document.getElementById('twitchLoginBtn');
+        if (loginBtn) {
+            loginBtn.onclick = () => {
+                const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=user:read:email`;
+                console.log("Redirecting to:", authUrl);
+                window.location.href = authUrl;
+            };
+        }
         
-        // Attach login button
-        document.getElementById('twitchLoginBtn').onclick = () => {
-            const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=user:read:email`;
-            window.location.href = authUrl;
-        };
-        
-        // Attach logout button
-        document.getElementById('logoutBtn').onclick = logout;
+        // Setup logout button
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.onclick = logout;
+        }
     }
     
     // Start the app
