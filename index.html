@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BotRix Arena — Twitch Channel Points</title>
+    <title>BotRix Arena — Points Pools</title>
     <style>
         * {
             margin: 0;
@@ -28,7 +28,6 @@
             backdrop-filter: blur(12px);
             border-radius: 3rem;
             padding: 1.8rem;
-            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.5);
         }
 
         .login-wall {
@@ -36,7 +35,6 @@
             border-radius: 2rem;
             padding: 2.5rem 2rem;
             text-align: center;
-            border: 1px solid rgba(145, 180, 255, 0.3);
         }
 
         .twitch-btn {
@@ -93,7 +91,7 @@
             display: flex;
             align-items: baseline;
             gap: 10px;
-            border-left: 4px solid #9146ff;
+            border-left: 4px solid #ffb347;
         }
 
         .points-label {
@@ -185,14 +183,46 @@
             padding: 2rem;
         }
 
-        .twitch-badge {
+        .botrix-badge {
             display: inline-block;
-            background: #9146ff20;
+            background: #ffb34720;
             padding: 0.2rem 0.8rem;
             border-radius: 20px;
             font-size: 0.7rem;
             margin-left: 0.5rem;
+            color: #ffb347;
+        }
+
+        .streamer-input {
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .streamer-input label {
             color: #b9c3ff;
+        }
+
+        .streamer-input input {
+            background: #1e293b;
+            border: 1px solid #9146ff;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            color: white;
+        }
+
+        .streamer-input button {
+            background: #9146ff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            color: white;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -202,7 +232,7 @@
     <div id="loginWall" class="login-wall">
         <div style="font-size: 3rem;">🎮</div>
         <h2 style="color: white;">BotRix Arena</h2>
-        <p style="color: #b9c3ff;">Connect to spend your REAL Twitch Channel Points on exclusive pools!</p>
+        <p style="color: #b9c3ff;">Connect to spend your BotRix points on exclusive pools!</p>
         <button id="twitchLoginBtn" class="twitch-btn">🔐 LOGIN WITH TWITCH</button>
         <div id="loginMessage" class="login-status" style="margin-top: 1rem;"></div>
     </div>
@@ -215,15 +245,21 @@
                     <div class="username" id="userDisplayName"></div>
                     <div style="font-size: 0.75rem; color:#8f9bb5;">
                         <span id="userLogin"></span>
-                        <span class="twitch-badge">✨ Twitch Channel Points</span>
+                        <span class="botrix-badge">✨ BotRix Points (Kick)</span>
                     </div>
                 </div>
             </div>
             <div class="points-card">
-                <span class="points-label">🎲 TWITCH CHANNEL POINTS</span>
+                <span class="points-label">🎲 BOTRIX POINTS</span>
                 <span class="points-value" id="pointsAmount">0</span>
             </div>
             <button id="logoutBtn" class="logout-btn">🚪 Disconnect</button>
+        </div>
+
+        <div class="streamer-input">
+            <label>🎥 Streamer Name (for BotRix):</label>
+            <input type="text" id="streamerName" placeholder="e.g., yourkickusername" value="yosuketv">
+            <button id="refreshPointsBtn">Refresh Points</button>
         </div>
 
         <h2 style="color: white; margin: 1rem 0;">🎯 ACTIVE POOLS</h2>
@@ -231,7 +267,7 @@
             <div class="loading">Loading pools...</div>
         </div>
         <div id="notificationMessage" class="message-area">
-            💡 Welcome! Your REAL Twitch channel points will be used to join pools.
+            💡 Enter your streamer name above, then join pools using your BotRix points!
         </div>
     </div>
 </div>
@@ -244,12 +280,7 @@
     const TWITCH_CLIENT_ID = "dxswtl8r959ihaqh4p17vpjmb19nos";
     const REDIRECT_URI = "https://yosuketv.github.io/YosukeTV/";
     
-    // Required scopes for channel points
-    const TWITCH_SCOPES = [
-        'user:read:email',
-        'channel:read:redemptions',
-        'channel:manage:redemptions'
-    ].join(' ');
+    const TWITCH_SCOPES = 'user:read:email';
     
     const AVAILABLE_POOLS = [
         { id: "pool_valo", name: "🔫 VALORANT SKINS POOL", description: "Win a premium skin bundle", cost: 250 },
@@ -260,79 +291,38 @@
     
     let currentUser = null;
     let accessToken = null;
+    let currentStreamerName = "YosukeTV";
     
     // ============ API FUNCTIONS ============
     
-    async function getUserPointsFromTwitch() {
-        if (!accessToken) return null;
-        
+    async function getUserPointsFromBotRix(streamerName, viewerName) {
         try {
-            // Get the user's channel points balance from Twitch
-            // First, get the user's broadcaster ID (they are the broadcaster for their own points)
-            const userResponse = await fetch('https://api.twitch.tv/helix/users', {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Client-Id': TWITCH_CLIENT_ID
-                }
-            });
-            const userData = await userResponse.json();
-            const broadcasterId = userData.data[0].id;
-            
-            // Get channel points custom rewards (this gives us the points balance)
-            // Note: The actual points balance requires the 'channel:read:redemptions' scope
-            const pointsResponse = await fetch(`https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Client-Id': TWITCH_CLIENT_ID
-                }
-            });
-            
-            if (!pointsResponse.ok) {
-                console.error('Failed to fetch points:', pointsResponse.status);
-                return null;
-            }
-            
-            const pointsData = await pointsResponse.json();
-            
-            // The API doesn't directly give the total points balance.
-            // We need to track points spent in our database.
-            // Alternative approach: Create a custom reward and track redemptions.
-            
-            // For now, we'll use our database to track points since Twitch doesn't expose the balance directly
-            // Let's fetch from our backend
-            const dbResponse = await fetch(`${API_BASE_URL}/api/twitch-points/${broadcasterId}`);
-            const dbData = await dbResponse.json();
-            return dbData.points || 0;
-            
+            const response = await fetch(`${API_BASE_URL}/api/points/${encodeURIComponent(streamerName)}/${encodeURIComponent(viewerName)}`);
+            const data = await response.json();
+            return data.success ? data.points : null;
         } catch (error) {
-            console.error('Error fetching Twitch points:', error);
+            console.error("Error fetching points:", error);
             return null;
         }
     }
     
-    async function spendTwitchPoints(twitchId, poolId, poolName, cost, accessToken) {
+    async function joinPool(userId, streamerName, viewerName, poolId, poolName, cost) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/spend-points`, {
+            const response = await fetch(`${API_BASE_URL}/api/join-pool`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    twitchId, 
-                    poolId, 
-                    poolName, 
-                    cost,
-                    accessToken 
-                })
+                body: JSON.stringify({ userId, streamerName, viewerName, poolId, poolName, cost })
             });
             return await response.json();
         } catch (error) {
-            console.error("Error spending points:", error);
+            console.error("Error joining pool:", error);
             return { success: false, message: "Network error" };
         }
     }
     
-    async function getUserEntriesAPI(twitchId) {
+    async function getUserEntries(userId) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/entries/${twitchId}`);
+            const response = await fetch(`${API_BASE_URL}/api/entries/${userId}`);
             const data = await response.json();
             return data.entries || [];
         } catch (error) {
@@ -365,19 +355,23 @@
     // ============ UI FUNCTIONS ============
     
     async function updateDashboard() {
-        if (!currentUser || !accessToken) return;
+        if (!currentUser) return;
         
-        document.getElementById('poolsContainer').innerHTML = '<div class="loading">📡 Fetching your Twitch channel points...</div>';
+        const viewerName = currentUser.login;
+        const streamerName = document.getElementById('streamerName').value.trim() || currentStreamerName;
+        currentStreamerName = streamerName;
         
-        const points = await getUserPointsFromTwitch();
+        document.getElementById('poolsContainer').innerHTML = '<div class="loading">📡 Fetching your BotRix points from ' + streamerName + '\'s leaderboard...</div>';
+        
+        const points = await getUserPointsFromBotRix(streamerName, viewerName);
         
         if (points !== null) {
             document.getElementById('pointsAmount').innerText = points;
-            const entries = await getUserEntriesAPI(currentUser.id);
+            const entries = await getUserEntries(currentUser.id);
             const enteredPoolIds = entries.map(e => e.poolId);
             renderPools(points, enteredPoolIds);
         } else {
-            document.getElementById('poolsContainer').innerHTML = '<div class="loading">⚠️ Could not fetch Twitch points. Make sure you\'re the broadcaster or have proper permissions.</div>';
+            document.getElementById('poolsContainer').innerHTML = '<div class="loading">⚠️ Could not fetch BotRix points. Make sure the streamer name is correct and BotRix is connected to that channel.</div>';
         }
     }
     
@@ -394,12 +388,12 @@
             card.innerHTML = `
                 <div class="pool-name">${pool.name}</div>
                 <div style="color: #a9b6e0; font-size: 0.85rem;">${pool.description}</div>
-                <div class="pool-cost">💰 ${pool.cost} Channel Points</div>
+                <div class="pool-cost">💰 ${pool.cost} BotRix Points</div>
                 <div style="font-size: 0.8rem; margin: 0.5rem 0;">
                     ${alreadyEntered ? '✅ Already entered' : '⚡ Not entered yet'}
                 </div>
                 <button class="enter-btn" data-pool-id="${pool.id}" data-cost="${pool.cost}" ${!canJoin ? 'disabled' : ''}>
-                    ${alreadyEntered ? 'ALREADY JOINED' : (canJoin ? `SPEND ${pool.cost} CHANNEL POINTS` : 'NOT ENOUGH POINTS')}
+                    ${alreadyEntered ? 'ALREADY JOINED' : (canJoin ? `SPEND ${pool.cost} POINTS` : 'NOT ENOUGH POINTS')}
                 </button>
             `;
             container.appendChild(card);
@@ -407,17 +401,19 @@
         
         document.querySelectorAll('.enter-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
-                if (!currentUser || !accessToken) return;
+                if (!currentUser) return;
                 
                 const poolId = btn.dataset.poolId;
                 const cost = parseInt(btn.dataset.cost);
                 const pool = AVAILABLE_POOLS.find(p => p.id === poolId);
+                const streamerName = document.getElementById('streamerName').value.trim() || currentStreamerName;
+                const viewerName = currentUser.login;
                 
                 const msgDiv = document.getElementById('notificationMessage');
-                msgDiv.innerHTML = '⏳ Creating Twitch redemption...';
+                msgDiv.innerHTML = '⏳ Processing...';
                 btn.disabled = true;
                 
-                const result = await spendTwitchPoints(currentUser.id, poolId, pool.name, cost, accessToken);
+                const result = await joinPool(currentUser.id, streamerName, viewerName, poolId, pool.name, cost);
                 
                 if (result.success) {
                     msgDiv.innerHTML = `🎉 ${result.message}`;
@@ -429,7 +425,7 @@
                 
                 setTimeout(() => {
                     if (msgDiv.innerHTML.includes(result.message)) {
-                        msgDiv.innerHTML = '💡 Spend your Twitch Channel Points on exclusive pools!';
+                        msgDiv.innerHTML = '💡 Spend your BotRix points on exclusive pools!';
                     }
                 }, 5000);
             });
@@ -482,6 +478,7 @@
         };
         
         document.getElementById('logoutBtn').onclick = logout;
+        document.getElementById('refreshPointsBtn').onclick = () => updateDashboard();
     }
     
     init();
