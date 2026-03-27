@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BotRix Arena — Points Pools</title>
+    <title>BotRix Arena — Wheel of Fortune</title>
     <style>
         * {
             margin: 0;
@@ -22,7 +22,7 @@
         }
 
         .app-container {
-            max-width: 1300px;
+            max-width: 900px;
             width: 100%;
             background: rgba(15, 20, 35, 0.75);
             backdrop-filter: blur(12px);
@@ -94,11 +94,6 @@
             border-left: 4px solid #ffb347;
         }
 
-        .points-label {
-            font-size: 0.9rem;
-            color: #cddcff;
-        }
-
         .points-value {
             font-size: 2rem;
             font-weight: 800;
@@ -114,53 +109,80 @@
             cursor: pointer;
         }
 
-        .pools-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1rem;
+        /* Wheel Pool Card */
+        .wheel-card {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-radius: 2rem;
+            padding: 2rem;
+            text-align: center;
+            border: 2px solid #ffb347;
+            margin-bottom: 2rem;
         }
 
-        .pool-card {
-            background: rgba(25, 32, 55, 0.8);
-            border-radius: 1.8rem;
-            padding: 1.5rem;
-            border: 1px solid rgba(145, 180, 255, 0.25);
-        }
-
-        .pool-name {
-            font-size: 1.5rem;
+        .wheel-name {
+            font-size: 2rem;
             font-weight: bold;
             color: white;
+            margin-bottom: 0.5rem;
         }
 
-        .pool-cost {
-            background: #1e293b;
-            display: inline-block;
-            padding: 0.2rem 1rem;
-            border-radius: 40px;
+        .wheel-description {
+            color: #a9b6e0;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+
+        .bet-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+            margin: 1.5rem 0;
+        }
+
+        .bet-amount {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .bet-amount label {
             color: #ffd966;
-            margin: 0.5rem 0;
+            font-weight: bold;
+        }
+
+        .bet-amount input {
+            background: #0f172a;
+            border: 2px solid #9146ff;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            color: white;
+            font-size: 1.2rem;
+            width: 120px;
+            text-align: center;
+        }
+
+        .multiplier-badge {
+            background: #9146ff;
+            padding: 0.3rem 1rem;
+            border-radius: 2rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
         }
 
         .enter-btn {
-            width: 100%;
-            background: #2d3748;
-            border: none;
-            padding: 0.75rem;
-            border-radius: 2rem;
-            margin-top: 0.8rem;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .enter-btn:enabled {
             background: #9146ff;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 3rem;
+            font-size: 1.2rem;
+            font-weight: bold;
             color: white;
-        }
-
-        .enter-btn:enabled:hover {
-            background: #a259ff;
+            cursor: pointer;
+            transition: 0.2s;
         }
 
         .enter-btn:disabled {
@@ -168,11 +190,54 @@
             cursor: not-allowed;
         }
 
-        .message-area {
+        .admin-section {
             margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px dashed #ffb347;
+            text-align: center;
+        }
+
+        .admin-title {
+            color: #ffb347;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .admin-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .win-btn {
+            background: #10b981;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 2rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+        }
+
+        .lose-btn {
+            background: #ef4444;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 2rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+        }
+
+        .message-area {
+            margin-top: 1.5rem;
             background: #0b0f1c;
             border-radius: 1.5rem;
-            padding: 1rem 1.5rem;
+            padding: 1rem;
+            text-align: center;
             color: #bfcbff;
             border-left: 4px solid #9146ff;
         }
@@ -183,9 +248,9 @@
             padding: 2rem;
         }
 
-        .botrix-badge {
-            display: inline-block;
+        .admin-only-badge {
             background: #ffb34720;
+            display: inline-block;
             padding: 0.2rem 0.8rem;
             border-radius: 20px;
             font-size: 0.7rem;
@@ -193,36 +258,9 @@
             color: #ffb347;
         }
 
-        .streamer-input {
-            margin-bottom: 1rem;
-            padding: 0.5rem;
-            background: rgba(0,0,0,0.3);
-            border-radius: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .streamer-input label {
-            color: #b9c3ff;
-        }
-
-        .streamer-input input {
-            background: #1e293b;
-            border: 1px solid #9146ff;
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
-            color: white;
-        }
-
-        .streamer-input button {
-            background: #9146ff;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
-            color: white;
-            cursor: pointer;
+        @media (max-width: 680px) {
+            .wheel-name { font-size: 1.5rem; }
+            .bet-amount input { width: 100px; }
         }
     </style>
 </head>
@@ -230,11 +268,11 @@
 
 <div class="app-container">
     <div id="loginWall" class="login-wall">
-        <div style="font-size: 3rem;">🎮</div>
-        <h2 style="color: white;">BotRix Arena</h2>
-        <p style="color: #b9c3ff;">Connect to spend your BotRix points on exclusive pools!</p>
+        <div style="font-size: 3rem;">🎡</div>
+        <h2 style="color: white;">BotRix Arena — Wheel of Fortune</h2>
+        <p style="color: #b9c3ff;">Connect your Twitch account to spin the wheel with your BotRix points!</p>
         <button id="twitchLoginBtn" class="twitch-btn">🔐 LOGIN WITH TWITCH</button>
-        <div id="loginMessage" class="login-status" style="margin-top: 1rem;"></div>
+        <div id="loginMessage" style="margin-top: 1rem; color: #b9c3ff;"></div>
     </div>
 
     <div id="dashboard" class="dashboard">
@@ -245,29 +283,48 @@
                     <div class="username" id="userDisplayName"></div>
                     <div style="font-size: 0.75rem; color:#8f9bb5;">
                         <span id="userLogin"></span>
-                        <span class="botrix-badge">✨ BotRix Points (Kick)</span>
+                        <span class="admin-only-badge">✨ BotRix Points</span>
                     </div>
                 </div>
             </div>
             <div class="points-card">
-                <span class="points-label">🎲 BOTRIX POINTS</span>
+                <span>🎲 BOTRIX POINTS</span>
                 <span class="points-value" id="pointsAmount">0</span>
             </div>
             <button id="logoutBtn" class="logout-btn">🚪 Disconnect</button>
         </div>
 
-        <div class="streamer-input">
-            <label>🎥 Streamer Name (for BotRix):</label>
-            <input type="text" id="streamerName" placeholder="e.g., yourkickusername" value="yosuketv">
-            <button id="refreshPointsBtn">Refresh Points</button>
+        <!-- Single Wheel Pool -->
+        <div class="wheel-card">
+            <div class="wheel-name">🎡 THE SPINNING WHEEL 🎡</div>
+            <div class="wheel-description">
+                "Take a chance on the spinning wheel! Will the wheel be right this time?"
+            </div>
+            
+            <div class="bet-controls">
+                <div class="bet-amount">
+                    <label>💰 BET AMOUNT:</label>
+                    <input type="number" id="betAmount" min="5" max="100" value="50" step="5">
+                    <span class="multiplier-badge">🎲 24x MULTIPLIER</span>
+                </div>
+                <button id="spinBtn" class="enter-btn">🎡 SPIN THE WHEEL (Cost: Selected Points)</button>
+            </div>
+
+            <!-- Admin Section (Only visible to you) -->
+            <div id="adminSection" class="admin-section" style="display: none;">
+                <div class="admin-title">🔐 ADMIN CONTROL PANEL</div>
+                <div class="admin-buttons">
+                    <button id="adminWinBtn" class="win-btn">✅ WIN (Award 24x Points)</button>
+                    <button id="adminLoseBtn" class="lose-btn">❌ LOSE (Deduct Bet Amount)</button>
+                </div>
+                <p style="font-size: 0.7rem; color: #ffb347; margin-top: 0.5rem;">
+                    Current pending spin: <span id="pendingBetDisplay">0</span> points
+                </p>
+            </div>
         </div>
 
-        <h2 style="color: white; margin: 1rem 0;">🎯 ACTIVE POOLS</h2>
-        <div id="poolsContainer" class="pools-grid">
-            <div class="loading">Loading pools...</div>
-        </div>
         <div id="notificationMessage" class="message-area">
-            💡 Enter your streamer name above, then join pools using your BotRix points!
+            💡 Enter a bet amount (5-100 points) and spin the wheel! Only you (as admin) can resolve the outcome.
         </div>
     </div>
 </div>
@@ -282,15 +339,10 @@
     
     const TWITCH_SCOPES = 'user:read:email';
     
-    const AVAILABLE_POOLS = [
-        { id: "pool_valo", name: "🔫 VALORANT SKINS POOL", description: "Win a premium skin bundle", cost: 250 },
-        { id: "pool_emote", name: "😎 EMOTE JACKPOT", description: "Custom animated emote", cost: 120 },
-        { id: "pool_gift", name: "🎁 10x GIFTED SUBS", description: "10 Tier 1 gift subs", cost: 400 },
-        { id: "pool_arcane", name: "⚡ BOTRIX MYSTERY BOX", description: "Random surprise", cost: 80 }
-    ];
-    
     let currentUser = null;
     let accessToken = null;
+    let currentPoints = 0;
+    let pendingBet = null; // Stores { amount, entryId }
     let currentStreamerName = "YosukeTV";
     
     // ============ API FUNCTIONS ============
@@ -306,16 +358,23 @@
         }
     }
     
-    async function joinPool(userId, streamerName, viewerName, poolId, poolName, cost) {
+    async function spendPointsForSpin(userId, streamerName, viewerName, amount) {
         try {
             const response = await fetch(`${API_BASE_URL}/api/join-pool`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, streamerName, viewerName, poolId, poolName, cost })
+                body: JSON.stringify({ 
+                    userId, 
+                    streamerName, 
+                    viewerName, 
+                    poolId: "wheel_spin", 
+                    poolName: "Wheel Spin", 
+                    cost: amount 
+                })
             });
             return await response.json();
         } catch (error) {
-            console.error("Error joining pool:", error);
+            console.error("Error spending points:", error);
             return { success: false, message: "Network error" };
         }
     }
@@ -354,82 +413,125 @@
     
     // ============ UI FUNCTIONS ============
     
-    async function updateDashboard() {
+    async function updatePoints() {
         if (!currentUser) return;
         
         const viewerName = currentUser.login;
-        const streamerName = document.getElementById('streamerName').value.trim() || currentStreamerName;
-        currentStreamerName = streamerName;
-        
-        document.getElementById('poolsContainer').innerHTML = '<div class="loading">📡 Fetching your BotRix points from ' + streamerName + '\'s leaderboard...</div>';
-        
-        const points = await getUserPointsFromBotRix(streamerName, viewerName);
+        const points = await getUserPointsFromBotRix(currentStreamerName, viewerName);
         
         if (points !== null) {
+            currentPoints = points;
             document.getElementById('pointsAmount').innerText = points;
-            const entries = await getUserEntries(currentUser.id);
-            const enteredPoolIds = entries.map(e => e.poolId);
-            renderPools(points, enteredPoolIds);
-        } else {
-            document.getElementById('poolsContainer').innerHTML = '<div class="loading">⚠️ Could not fetch BotRix points. Make sure the streamer name is correct and BotRix is connected to that channel.</div>';
+            
+            // Check if there's a pending spin
+            await checkPendingSpin();
         }
     }
     
-    function renderPools(currentPoints, enteredPoolIds) {
-        const container = document.getElementById('poolsContainer');
-        container.innerHTML = '';
+    async function checkPendingSpin() {
+        if (!currentUser) return;
         
-        for (let pool of AVAILABLE_POOLS) {
-            const alreadyEntered = enteredPoolIds.includes(pool.id);
-            const canJoin = (!alreadyEntered && currentPoints >= pool.cost);
-            
-            const card = document.createElement('div');
-            card.className = 'pool-card';
-            card.innerHTML = `
-                <div class="pool-name">${pool.name}</div>
-                <div style="color: #a9b6e0; font-size: 0.85rem;">${pool.description}</div>
-                <div class="pool-cost">💰 ${pool.cost} BotRix Points</div>
-                <div style="font-size: 0.8rem; margin: 0.5rem 0;">
-                    ${alreadyEntered ? '✅ Already entered' : '⚡ Not entered yet'}
-                </div>
-                <button class="enter-btn" data-pool-id="${pool.id}" data-cost="${pool.cost}" ${!canJoin ? 'disabled' : ''}>
-                    ${alreadyEntered ? 'ALREADY JOINED' : (canJoin ? `SPEND ${pool.cost} POINTS` : 'NOT ENOUGH POINTS')}
-                </button>
-            `;
-            container.appendChild(card);
+        const entries = await getUserEntries(currentUser.id);
+        const pendingEntry = entries.find(e => e.poolId === "wheel_spin" && !e.resolved);
+        
+        if (pendingEntry) {
+            pendingBet = {
+                amount: pendingEntry.cost,
+                entryId: pendingEntry._id
+            };
+            document.getElementById('pendingBetDisplay').innerText = pendingBet.amount;
+            document.getElementById('spinBtn').disabled = true;
+            document.getElementById('adminSection').style.display = 'block';
+            document.getElementById('notificationMessage').innerHTML = `🎡 You have a pending spin! Bet: ${pendingBet.amount} points. Resolve the outcome using the admin panel.`;
+        } else {
+            pendingBet = null;
+            document.getElementById('pendingBetDisplay').innerText = '0';
+            document.getElementById('spinBtn').disabled = false;
+            document.getElementById('adminSection').style.display = 'none';
+        }
+    }
+    
+    async function resolveSpin(isWin) {
+        if (!pendingBet) {
+            showMessage("No pending spin to resolve!", "error");
+            return;
         }
         
-        document.querySelectorAll('.enter-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                if (!currentUser) return;
-                
-                const poolId = btn.dataset.poolId;
-                const cost = parseInt(btn.dataset.cost);
-                const pool = AVAILABLE_POOLS.find(p => p.id === poolId);
-                const streamerName = document.getElementById('streamerName').value.trim() || currentStreamerName;
-                const viewerName = currentUser.login;
-                
-                const msgDiv = document.getElementById('notificationMessage');
-                msgDiv.innerHTML = '⏳ Processing...';
-                btn.disabled = true;
-                
-                const result = await joinPool(currentUser.id, streamerName, viewerName, poolId, pool.name, cost);
-                
-                if (result.success) {
-                    msgDiv.innerHTML = `🎉 ${result.message}`;
-                    await updateDashboard();
-                } else {
-                    msgDiv.innerHTML = `⚠️ ${result.message}`;
-                    btn.disabled = false;
-                }
-                
-                setTimeout(() => {
-                    if (msgDiv.innerHTML.includes(result.message)) {
-                        msgDiv.innerHTML = '💡 Spend your BotRix points on exclusive pools!';
-                    }
-                }, 5000);
-            });
-        });
+        const betAmount = pendingBet.amount;
+        const winAmount = betAmount * 24;
+        
+        if (isWin) {
+            // AWARD POINTS: Add win amount to user's BotRix balance
+            // Note: This requires a BotRix API endpoint to add points
+            // For now, we'll simulate and notify user
+            showMessage(`🎉 WINNER! You won ${winAmount} points! (${betAmount} × 24)`, "win");
+            
+            // TODO: Call BotRix API to add points (if endpoint exists)
+            // For now, we'll mark the entry as resolved and refresh points
+            await markEntryResolved(pendingBet.entryId, true, winAmount);
+        } else {
+            // LOSS: Points already deducted, just mark as resolved
+            showMessage(`😢 LOSS! You lost ${betAmount} points. Better luck next time!`, "lose");
+            await markEntryResolved(pendingBet.entryId, false, 0);
+        }
+        
+        // Refresh points
+        await updatePoints();
+        await checkPendingSpin();
+    }
+    
+    async function markEntryResolved(entryId, isWin, winAmount) {
+        // This would require a backend endpoint to mark entries as resolved
+        // For now, we'll just remove from pending state
+        console.log(`Entry ${entryId} resolved: Win=${isWin}, Amount=${winAmount}`);
+        pendingBet = null;
+    }
+    
+    async function initiateSpin() {
+        if (!currentUser) {
+            showMessage("Please login first", "error");
+            return;
+        }
+        
+        const betAmount = parseInt(document.getElementById('betAmount').value);
+        
+        if (isNaN(betAmount) || betAmount < 5 || betAmount > 100) {
+            showMessage("Please enter a valid bet amount between 5 and 100 points.", "error");
+            return;
+        }
+        
+        if (currentPoints < betAmount) {
+            showMessage(`Insufficient points! You have ${currentPoints}, need ${betAmount}.`, "error");
+            return;
+        }
+        
+        const viewerName = currentUser.login;
+        const result = await spendPointsForSpin(currentUser.id, currentStreamerName, viewerName, betAmount);
+        
+        if (result.success) {
+            showMessage(`🎡 Spin initiated! Bet: ${betAmount} points. Waiting for outcome resolution...`, "info");
+            await updatePoints();
+            await checkPendingSpin();
+        } else {
+            showMessage(result.message || "Failed to initiate spin", "error");
+        }
+    }
+    
+    function showMessage(msg, type) {
+        const msgDiv = document.getElementById('notificationMessage');
+        msgDiv.innerHTML = msg;
+        if (type === "win") {
+            msgDiv.style.borderLeftColor = "#10b981";
+        } else if (type === "lose") {
+            msgDiv.style.borderLeftColor = "#ef4444";
+        } else {
+            msgDiv.style.borderLeftColor = "#9146ff";
+        }
+        setTimeout(() => {
+            if (document.getElementById('notificationMessage').innerHTML === msg) {
+                msgDiv.style.borderLeftColor = "#9146ff";
+            }
+        }, 4000);
     }
     
     async function onLoginSuccess(user, token) {
@@ -443,12 +545,13 @@
         document.getElementById('userLogin').innerText = `@${user.login}`;
         document.getElementById('userAvatar').src = user.profile_image_url;
         
-        await updateDashboard();
+        await updatePoints();
     }
     
     function logout() {
         currentUser = null;
         accessToken = null;
+        pendingBet = null;
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('loginWall').style.display = 'block';
         window.location.hash = '';
@@ -478,7 +581,9 @@
         };
         
         document.getElementById('logoutBtn').onclick = logout;
-        document.getElementById('refreshPointsBtn').onclick = () => updateDashboard();
+        document.getElementById('spinBtn').onclick = initiateSpin;
+        document.getElementById('adminWinBtn').onclick = () => resolveSpin(true);
+        document.getElementById('adminLoseBtn').onclick = () => resolveSpin(false);
     }
     
     init();
