@@ -16,7 +16,9 @@
         .avatar { width: 52px; height: 52px; border-radius: 50%; border: 2px solid #9146ff; }
         .username { font-size: 1.4rem; font-weight: bold; color: #f0f3ff; }
         .points-card { background: linear-gradient(135deg, #1e293b, #0f172a); padding: 0.7rem 1.6rem; border-radius: 60px; display: flex; align-items: baseline; gap: 10px; border-left: 4px solid #ffb347; position: relative; }
-        .points-value { font-size: 2rem; font-weight: 800; color: #ffd966; }
+        .points-value { font-size: 2rem; font-weight: 800; color: #ffd966; transition: all 0.3s ease; }
+        .points-updated { animation: pointFlash 0.5s ease; }
+        @keyframes pointFlash { 0% { transform: scale(1); color: #ffd966; } 50% { transform: scale(1.1); color: #ffaa33; } 100% { transform: scale(1); color: #ffd966; } }
         .refresh-indicator { font-size: 0.7rem; color: #8f9bb5; margin-left: 5px; animation: pulse 1s infinite; }
         @keyframes pulse { 0% { opacity: 0.4; } 100% { opacity: 1; } }
         .logout-btn { background: rgba(255, 70, 85, 0.2); border: 1px solid #ff5e7a; padding: 0.5rem 1.2rem; border-radius: 2rem; color: #ffb3be; cursor: pointer; }
@@ -147,6 +149,7 @@
     let isAdmin = false;
     let refreshInterval = null;
     let autoRefreshInterval = null;
+    let lastPoints = 0;
     
     // Save user session
     function saveUserSession(user, token) {
@@ -168,8 +171,10 @@
         localStorage.removeItem('botrix_user');
     }
     
+    // Force fresh fetch - add timestamp to prevent caching
     async function getUserData(viewerName) {
-        const response = await fetch(`${API_BASE_URL}/api/user/${encodeURIComponent(viewerName)}`);
+        const timestamp = Date.now();
+        const response = await fetch(`${API_BASE_URL}/api/user/${encodeURIComponent(viewerName)}?t=${timestamp}`);
         return await response.json();
     }
     
@@ -190,14 +195,24 @@
         const response = await fetch(`${API_BASE_URL}/api/resolve-all-win`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' }
         });
-        return await response.json();
+        const result = await response.json();
+        // After win/loss, force an immediate refresh for the viewer's page
+        if (result.success) {
+            // Send a message to notify all tabs to refresh
+            localStorage.setItem('forcePointsRefresh', Date.now().toString());
+        }
+        return result;
     }
     
     async function resolveAllLoss() {
         const response = await fetch(`${API_BASE_URL}/api/resolve-all-loss`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' }
         });
-        return await response.json();
+        const result = await response.json();
+        if (result.success) {
+            localStorage.setItem('forcePointsRefresh', Date.now().toString());
+        }
+        return result;
     }
     
     async function getUserBets(userId) {
@@ -222,7 +237,7 @@
         return data.data[0];
     }
     
-    // Main function to update points - shows loading indicator
+    // Main function to update points - with animation when changed
     async function updateUserData(showLoading = false) {
         if (!currentUser) return;
         
@@ -237,14 +252,24 @@
                 const oldPoints = currentPoints;
                 currentPoints = data.points;
                 const pointsElement = document.getElementById('pointsAmount');
+                
+                // Update the display
                 pointsElement.innerText = currentPoints;
                 
                 // Flash animation if points changed
                 if (oldPoints !== currentPoints) {
-                    pointsElement.style.animation = 'none';
-                    pointsElement.offsetHeight;
-                    pointsElement.style.animation = 'pulse 0.5s ease';
-                    setTimeout(() => { pointsElement.style.animation = ''; }, 500);
+                    pointsElement.classList.add('points-updated');
+                    setTimeout(() => {
+                        pointsElement.classList.remove('points-updated');
+                    }, 500);
+                    
+                    // Also show a notification message for significant changes
+                    const change = currentPoints - oldPoints;
+                    if (change > 0) {
+                        showMessage(`🎉 +${change} points! New balance: ${currentPoints}`, "win");
+                    } else if (change < 0) {
+                        showMessage(`💀 -${Math.abs(change)} points. New balance: ${currentPoints}`, "lose");
+                    }
                 }
                 
                 if (data.stats) {
@@ -279,11 +304,11 @@
             document.getElementById('pendingBetInfo').style.display = 'block';
             document.getElementById('placeBetBtn').disabled = true;
             
-            // Start auto-refresh if user has pending bet
+            // Start auto-refresh every 2 seconds when pending bet
             if (!autoRefreshInterval) {
                 autoRefreshInterval = setInterval(() => {
                     updateUserData(false);
-                }, 3000); // Refresh every 3 seconds while waiting
+                }, 2000);
             }
         } else {
             document.getElementById('pendingBetInfo').style.display = 'none';
@@ -296,9 +321,9 @@
             }
         }
         
-        // If pending bet was just resolved, show a message
+        // If pending bet was just resolved, do an immediate refresh
         if (oldHasPendingBet && !hasPendingBet) {
-            showMessage(`✅ Your bet has been resolved! Your new balance is ${currentPoints} points.`, "info");
+            await updateUserData(true);
         }
     }
     
@@ -352,7 +377,8 @@
         if (result.success) {
             showMessage(`🎉 ${result.message}`, "win");
             await refreshAdminPanel();
-            await updateUserData(true); // Force refresh for current user
+            // Immediate refresh for current user
+            await updateUserData(true);
         } else {
             showMessage(result.message || "Failed to process wins", "error");
         }
@@ -363,7 +389,8 @@
         if (result.success) {
             showMessage(`💀 ${result.message}`, "lose");
             await refreshAdminPanel();
-            await updateUserData(true); // Force refresh for current user
+            // Immediate refresh for current user
+            await updateUserData(true);
         } else {
             showMessage(result.message || "Failed to process losses", "error");
         }
@@ -373,7 +400,11 @@
         const msgDiv = document.getElementById('notificationMessage');
         msgDiv.innerHTML = msg;
         msgDiv.style.borderLeftColor = type === "win" ? "#10b981" : (type === "lose" ? "#ef4444" : "#9146ff");
-        setTimeout(() => { if (document.getElementById('notificationMessage').innerHTML === msg) msgDiv.style.borderLeftColor = "#9146ff"; }, 4000);
+        setTimeout(() => { 
+            if (document.getElementById('notificationMessage').innerHTML === msg) {
+                msgDiv.style.borderLeftColor = "#9146ff";
+            }
+        }, 5000);
     }
     
     function setupStatsSlider() {
@@ -382,6 +413,16 @@
         toggleBtn.addEventListener('click', () => {
             panel.classList.toggle('open');
             toggleBtn.innerHTML = panel.classList.contains('open') ? '📊 Hide Statistics ▲' : '📊 View Statistics ▼';
+        });
+    }
+    
+    // Listen for cross-tab refresh signals
+    function setupCrossTabRefresh() {
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'forcePointsRefresh') {
+                console.log('Refresh signal received from admin tab');
+                updateUserData(true);
+            }
         });
     }
     
@@ -401,11 +442,12 @@
             document.getElementById('adminSection').style.display = 'block';
             document.getElementById('notificationMessage').innerHTML = '👑 Admin Mode: Use GLOBAL WIN/LOSS buttons to resolve ALL pending bets.';
             await refreshAdminPanel();
-            refreshInterval = setInterval(refreshAdminPanel, 5000);
+            refreshInterval = setInterval(refreshAdminPanel, 3000);
         }
         
         await updateUserData(true);
         setupStatsSlider();
+        setupCrossTabRefresh();
     }
     
     function logout() {
