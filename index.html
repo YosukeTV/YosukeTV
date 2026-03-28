@@ -123,7 +123,7 @@
         .user-info { display: flex; align-items: center; gap: 15px; }
         .avatar { width: 52px; height: 52px; border-radius: 50%; border: 2px solid #9146ff; object-fit: cover; }
         .username { font-size: 1.4rem; font-weight: bold; color: #f0f3ff; }
-        .platform-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; margin-left: 0.5rem; }
+        .loggedin-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; margin-left: 0.5rem; background: #ffb34720; color: #ffb347; }
         .points-card { background: linear-gradient(135deg, #1e293b, #0f172a); padding: 0.7rem 1.6rem; border-radius: 60px; display: flex; align-items: baseline; gap: 10px; border-left: 4px solid #ffb347; position: relative; }
         .points-value { font-size: 2rem; font-weight: 800; color: #ffd966; transition: all 0.3s ease; }
         .points-updated { animation: pointFlash 0.5s ease; }
@@ -132,6 +132,32 @@
         @keyframes pulse { 0% { opacity: 0.4; } 100% { opacity: 1; } }
         .logout-btn { background: rgba(255, 70, 85, 0.2); border: 1px solid #ff5e7a; padding: 0.5rem 1.2rem; border-radius: 2rem; color: #ffb3be; cursor: pointer; }
         .refresh-btn { background: rgba(145, 70, 255, 0.2); border: 1px solid #9146ff; padding: 0.5rem 1.2rem; border-radius: 2rem; color: #b9c3ff; cursor: pointer; }
+        
+        /* Platform Switcher */
+        .platform-switcher {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 1rem 0 1.5rem 0;
+        }
+        .platform-option {
+            padding: 0.5rem 1.5rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            background: rgba(30, 41, 59, 0.8);
+            color: #a9b6e0;
+            border: 1px solid rgba(145,70,255,0.3);
+        }
+        .platform-option.active {
+            background: #9146ff;
+            color: white;
+            border-color: #9146ff;
+            box-shadow: 0 0 10px rgba(145,70,255,0.5);
+        }
+        .platform-option.twitch.active { background: #9146ff; }
+        .platform-option.kick.active { background: #53fc18; color: #1a1a1a; border-color: #53fc18; }
         
         .stats-container { margin-bottom: 1.5rem; }
         .stats-toggle { background: #1e293b; border: none; padding: 0.6rem 1.2rem; border-radius: 2rem; color: #ffb347; cursor: pointer; font-weight: bold; width: 100%; text-align: center; }
@@ -235,7 +261,7 @@
                     <div class="username" id="userDisplayName"></div>
                     <div style="font-size: 0.75rem; color:#8f9bb5;">
                         <span id="userLogin"></span>
-                        <span id="platformBadge" class="platform-badge"></span>
+                        <span id="loggedinBadge" class="loggedin-badge"></span>
                         <span class="admin-only-badge">✨Gambling Addict✨</span>
                     </div>
                 </div>
@@ -249,6 +275,12 @@
                 <button id="manualRefreshBtn" class="refresh-btn">🔄 Refresh</button>
                 <button id="logoutBtn" class="logout-btn">🚪 Disconnect</button>
             </div>
+        </div>
+
+        <!-- Platform Switcher - Toggle between Twitch and Kick points -->
+        <div class="platform-switcher">
+            <div id="platformTwitch" class="platform-option twitch active">🎮 Twitch Points</div>
+            <div id="platformKick" class="platform-option kick">⚡ Kick Points</div>
         </div>
 
         <div class="stats-container">
@@ -301,6 +333,7 @@
     // Kick OAuth
     const KICK_CLIENT_ID = "01KMS7F70VZQKZ2NS4WXQDW8NX";
     const KICK_REDIRECT_URI = REDIRECT_URI;
+    const KICK_CLIENT_SECRET = "148c20ae237058a8f86ce40ea92b225ebdd62272ef588d4beb43e2b40d3258b6";
     
     let currentUser = null;
     let currentPoints = 0;
@@ -308,8 +341,8 @@
     let isAdmin = false;
     let refreshInterval = null;
     let autoRefreshInterval = null;
-    let currentPlatform = "twitch";
-    let currentAuthPlatform = "twitch";
+    let currentViewPlatform = "twitch";  // What points we're currently viewing
+    let loggedInPlatform = "twitch";      // How the user logged in
     
     // Menu Functions
     function openMenu() {
@@ -419,7 +452,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 client_id: KICK_CLIENT_ID,
-                client_secret: "148c20ae237058a8f86ce40ea92b225ebdd62272ef588d4beb43e2b40d3258b6",
+                client_secret: KICK_CLIENT_SECRET,
                 code: code,
                 redirect_uri: KICK_REDIRECT_URI,
                 grant_type: 'authorization_code'
@@ -450,7 +483,7 @@
         }
         
         try {
-            const data = await getUserData(currentUser.login, currentPlatform);
+            const data = await getUserData(currentUser.login, currentViewPlatform);
             if (data && data.success) {
                 const oldPoints = currentPoints;
                 currentPoints = data.points;
@@ -496,7 +529,7 @@
     async function checkUserPendingBet() {
         if (!currentUser) return;
         const bets = await getUserBets(currentUser.id);
-        const pending = bets.find(b => b.status === 'pending' && b.platform === currentPlatform);
+        const pending = bets.find(b => b.status === 'pending' && b.platform === currentViewPlatform);
         const oldHasPendingBet = hasPendingBet;
         hasPendingBet = !!pending;
         
@@ -538,7 +571,7 @@
             return;
         }
         
-        const result = await placeBet(currentUser.id, currentUser.login, betAmount, currentUser.id, currentPlatform);
+        const result = await placeBet(currentUser.id, currentUser.login, betAmount, currentUser.id, currentViewPlatform);
         if (result.success) {
             showMessage(`✅ Bet placed! ${betAmount} points deducted. Waiting for streamer to resolve the wheel.`, "info");
             await updateUserData(true);
@@ -619,27 +652,27 @@
         });
     }
     
-    function switchPlatform(platform) {
-        currentPlatform = platform;
+    // Switch between viewing Twitch or Kick points
+    function switchViewPlatform(platform) {
+        currentViewPlatform = platform;
         
-        // Update badge style
-        const badge = document.getElementById('platformBadge');
+        // Update button styles
+        document.getElementById('platformTwitch').classList.remove('active');
+        document.getElementById('platformKick').classList.remove('active');
         if (platform === 'twitch') {
-            badge.innerText = 'TWITCH';
-            badge.style.background = '#9146ff20';
-            badge.style.color = '#9146ff';
+            document.getElementById('platformTwitch').classList.add('active');
         } else {
-            badge.innerText = 'KICK';
-            badge.style.background = '#53fc1820';
-            badge.style.color = '#53fc18';
+            document.getElementById('platformKick').classList.add('active');
         }
         
+        // Refresh points with new platform
         updateUserData(true);
     }
     
     async function onLoginSuccess(user, token, platform) {
         currentUser = user;
-        currentAuthPlatform = platform;
+        loggedInPlatform = platform;
+        currentViewPlatform = platform;  // Default to viewing points from login platform
         isAdmin = user.login.toLowerCase() === ADMIN_USERNAME.toLowerCase();
         
         saveUserSession(user, token, platform);
@@ -650,17 +683,25 @@
         document.getElementById('userLogin').innerText = `@${user.login}`;
         document.getElementById('userAvatar').src = user.profile_image_url;
         
-        // Set platform badge based on login platform
+        // Set logged-in badge
+        const badge = document.getElementById('loggedinBadge');
         if (platform === 'twitch') {
-            document.getElementById('platformBadge').innerText = 'TWITCH';
-            document.getElementById('platformBadge').style.background = '#9146ff20';
-            document.getElementById('platformBadge').style.color = '#9146ff';
-            currentPlatform = 'twitch';
+            badge.innerText = 'Logged in with TWITCH';
+            badge.style.background = '#9146ff20';
+            badge.style.color = '#9146ff';
         } else {
-            document.getElementById('platformBadge').innerText = 'KICK';
-            document.getElementById('platformBadge').style.background = '#53fc1820';
-            document.getElementById('platformBadge').style.color = '#53fc18';
-            currentPlatform = 'kick';
+            badge.innerText = 'Logged in with KICK';
+            badge.style.background = '#53fc1820';
+            badge.style.color = '#53fc18';
+        }
+        
+        // Set initial active platform switcher
+        document.getElementById('platformTwitch').classList.remove('active');
+        document.getElementById('platformKick').classList.remove('active');
+        if (platform === 'twitch') {
+            document.getElementById('platformTwitch').classList.add('active');
+        } else {
+            document.getElementById('platformKick').classList.add('active');
         }
         
         if (isAdmin) {
@@ -697,6 +738,10 @@
         document.getElementById('menuClose').onclick = closeMenu;
         document.getElementById('menuOverlay').onclick = closeMenu;
         document.getElementById('closeMenuItem').onclick = closeMenu;
+        
+        // Setup platform switchers
+        document.getElementById('platformTwitch').onclick = () => switchViewPlatform('twitch');
+        document.getElementById('platformKick').onclick = () => switchViewPlatform('kick');
         
         // Check for Twitch token
         const twitchToken = getTwitchTokenFromUrl();
