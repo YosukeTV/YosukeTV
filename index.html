@@ -38,6 +38,16 @@
         .twitch-login-btn { background: #9146ff; border: none; padding: 0.8rem 1.5rem; border-radius: 60px; font-size: 1.1rem; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; width: 100%; max-width: 250px; margin: 0 auto; display: block; }
         .twitch-login-btn:hover { background: #a05eff; transform: translateY(-2px); }
         .custom-auth-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(145,70,255,0.3); }
+        .custom-auth-note {
+            background: rgba(255, 180, 70, 0.15);
+            border-left: 3px solid #ffb347;
+            padding: 0.6rem 1rem;
+            border-radius: 0.8rem;
+            margin-bottom: 1rem;
+            font-size: 0.8rem;
+            color: #ffd966;
+            text-align: center;
+        }
         .auth-tabs { display: flex; gap: 1rem; justify-content: center; margin-bottom: 1.5rem; }
         .auth-tab { padding: 0.5rem 1.5rem; border-radius: 2rem; cursor: pointer; background: rgba(30,41,59,0.6); color: #a9b6e0; transition: 0.2s; }
         .auth-tab.active { background: #9146ff; color: white; }
@@ -137,6 +147,9 @@
         <p style="color: #b9c3ff;">Connect your account to gamble your points away :D</p>
         <button id="twitchLoginBtn" class="twitch-login-btn">🎮 LOGIN WITH TWITCH</button>
         <div class="custom-auth-section">
+            <div class="custom-auth-note">
+                ℹ️ <strong>Important:</strong> For your points to show correctly, use the <strong>exact same username</strong> as you use on Twitch or Kick. Points are tied to your platform username.
+            </div>
             <div class="auth-tabs"><div id="loginTab" class="auth-tab active">Login</div><div id="registerTab" class="auth-tab">Register</div></div>
             <div id="loginForm" class="auth-form active">
                 <input type="text" id="loginUsername" placeholder="Username" autocomplete="username">
@@ -292,7 +305,6 @@
         const betAmount = parseInt(document.getElementById('betAmount').value);
         if (isNaN(betAmount) || betAmount < 5 || betAmount > 100) { showMessage("Enter a valid bet amount between 5 and 100 points.", "error"); return; }
         if (currentPoints < betAmount) { showMessage(`Insufficient points! You have ${currentPoints}, need ${betAmount}.`, "error"); return; }
-        // IMPORTANT: For Twitch users, we use the numeric ID (currentUser.id). For custom users, we use username.
         const twitchIdForApi = currentUser.type === 'twitch' ? currentUser.id : currentUser.username;
         const result = await placeBet(currentUser.id || currentUser.username, currentUser.username, betAmount, twitchIdForApi, currentViewPlatform);
         if (result.success) {
@@ -359,7 +371,6 @@
         document.getElementById('userDisplayName').innerText = user.displayName || user.username;
         document.getElementById('userLogin').innerText = `@${user.username}`;
         
-        // Set avatar
         const avatarContainer = document.getElementById('userAvatarPlaceholder');
         if (type === 'twitch' && user.profile_image_url) {
             avatarContainer.innerHTML = `<img src="${user.profile_image_url}" alt="avatar">`;
