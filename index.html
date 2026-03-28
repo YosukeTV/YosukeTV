@@ -323,7 +323,7 @@
         if (result.success) {
             showMessage(`✅ Bet placed! ${betAmount} points deducted. Waiting for resolution.`, "info");
             await updateUserData(true);
-            window.open("https://www.twitch.tv/yosuketv", "_blank");
+            // Removed redirect: window.open("https://www.twitch.tv/yosuketv", "_blank");
         } else {
             showMessage(result.message || "Failed to place bet", "error");
         }
@@ -376,10 +376,9 @@
     
     async function onLoginSuccess(user, token, type) {
         currentUser = user;
-        // Double‑check admin status from server
         const verifiedAdmin = await checkAdminStatus();
         isAdmin = verifiedAdmin;
-        user.isAdmin = isAdmin; // store for session
+        user.isAdmin = isAdmin;
         
         if (type === 'twitch') saveTwitchUserSession(user, token);
         else saveCustomUserSession(user, token);
