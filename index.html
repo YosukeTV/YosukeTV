@@ -99,8 +99,7 @@
         
         /* Login Wall */
         .login-wall { background: rgba(8, 12, 25, 0.95); border-radius: 2rem; padding: 2.5rem 2rem; text-align: center; }
-        .platform-buttons { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; flex-wrap: wrap; }
-        .twitch-login-btn { background: #9146ff; border: none; padding: 0.8rem 1.5rem; border-radius: 60px; font-size: 1.1rem; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; width: 100%; max-width: 250px; margin: 0 auto; }
+        .twitch-login-btn { background: #9146ff; border: none; padding: 0.8rem 1.5rem; border-radius: 60px; font-size: 1.1rem; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; width: 100%; max-width: 250px; margin: 0 auto; display: block; }
         .twitch-login-btn:hover { background: #a05eff; transform: translateY(-2px); }
         
         /* Custom Auth Forms */
@@ -358,8 +357,8 @@
             </div>
         </div>
         
-        <!-- Admin Secret Section -->
-        <div class="admin-secret-section">
+        <!-- Admin Secret Section - Only visible when logged in -->
+        <div id="adminSecretSection" class="admin-secret-section" style="display: none;">
             <p>🔐 Admin Access</p>
             <div class="admin-secret-input">
                 <input type="password" id="adminSecret" placeholder="Enter admin code">
@@ -495,7 +494,12 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token })
         });
-        return await response.json();
+        const data = await response.json();
+        // If token is invalid, clear it
+        if (data.clearToken) {
+            clearUserSession();
+        }
+        return data;
     }
     
     async function register(username, email, password) {
@@ -517,6 +521,13 @@
     }
     
     async function enableAdminMode() {
+        // Check if user is logged in first
+        if (!currentUser) {
+            const msgDiv = document.getElementById('adminSecretMessage');
+            msgDiv.innerText = '❌ Please login first before enabling admin mode';
+            return;
+        }
+        
         const secretCode = document.getElementById('adminSecret').value;
         const msgDiv = document.getElementById('adminSecretMessage');
         
@@ -840,6 +851,8 @@
             refreshInterval = setInterval(refreshAdminPanel, 3000);
         } else {
             document.getElementById('adminBadge').style.display = 'none';
+            // Show admin secret section for non-admin users to enable admin
+            document.getElementById('adminSecretSection').style.display = 'block';
         }
         
         await updateUserData(true);
@@ -854,6 +867,8 @@
         clearUserSession();
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('loginWall').style.display = 'block';
+        // Hide admin secret section again
+        document.getElementById('adminSecretSection').style.display = 'none';
         window.location.hash = '';
         window.history.replaceState(null, '', window.location.pathname);
     }
@@ -936,7 +951,7 @@
         // Admin secret button
         document.getElementById('enableAdminBtn').onclick = enableAdminMode;
         
-        // Twitch login
+        // Check for Twitch login first (priority)
         const twitchToken = getTwitchTokenFromUrl();
         if (twitchToken) {
             try {
@@ -949,10 +964,10 @@
                 }, twitchToken, 'twitch');
                 window.history.replaceState(null, '', window.location.pathname);
                 return;
-            } catch (err) { console.log('Twitch login failed'); }
+            } catch (err) { console.log('Twitch login failed', err); }
         }
         
-        // Load saved session
+        // Only load saved session if no Twitch login in progress
         const savedSession = loadUserSession();
         if (savedSession && savedSession.token) {
             try {
@@ -961,11 +976,16 @@
                     await onLoginSuccess(verifyResult.user, savedSession.token, verifyResult.user.type);
                     return;
                 }
-            } catch (err) { clearUserSession(); }
+            } catch (err) { 
+                console.log('Session verification failed', err);
+                clearUserSession();
+            }
         }
     }
     
     document.getElementById('twitchLoginBtn').onclick = () => {
+        // Clear any existing session before Twitch login
+        clearUserSession();
         window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=${encodeURIComponent('user:read:email')}`;
     };
     document.getElementById('logoutBtn').onclick = logout;
