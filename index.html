@@ -50,7 +50,8 @@
         .dashboard { display: none; }
         .user-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; background: rgba(0, 0, 0, 0.4); padding: 1rem 1.8rem; border-radius: 2rem; margin-bottom: 1rem; }
         .user-info { display: flex; align-items: center; gap: 15px; }
-        .avatar { width: 52px; height: 52px; border-radius: 50%; background: #2a2f4b; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 2px solid #9146ff; }
+        .avatar { width: 52px; height: 52px; border-radius: 50%; background: #2a2f4b; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 2px solid #9146ff; overflow: hidden; }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .username { font-size: 1.4rem; font-weight: bold; color: #f0f3ff; }
         .loggedin-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; margin-left: 0.5rem; background: #ffb34720; color: #ffb347; }
         .points-card { background: linear-gradient(135deg, #1e293b, #0f172a); padding: 0.7rem 1.6rem; border-radius: 60px; display: flex; align-items: baseline; gap: 10px; border-left: 4px solid #ffb347; }
@@ -291,7 +292,9 @@
         const betAmount = parseInt(document.getElementById('betAmount').value);
         if (isNaN(betAmount) || betAmount < 5 || betAmount > 100) { showMessage("Enter a valid bet amount between 5 and 100 points.", "error"); return; }
         if (currentPoints < betAmount) { showMessage(`Insufficient points! You have ${currentPoints}, need ${betAmount}.`, "error"); return; }
-        const result = await placeBet(currentUser.id || currentUser.username, currentUser.username, betAmount, currentUser.username, currentViewPlatform);
+        // IMPORTANT: For Twitch users, we use the numeric ID (currentUser.id). For custom users, we use username.
+        const twitchIdForApi = currentUser.type === 'twitch' ? currentUser.id : currentUser.username;
+        const result = await placeBet(currentUser.id || currentUser.username, currentUser.username, betAmount, twitchIdForApi, currentViewPlatform);
         if (result.success) {
             showMessage(`✅ Bet placed! ${betAmount} points deducted. Waiting for resolution.`, "info");
             await updateUserData(true);
@@ -355,10 +358,22 @@
         document.getElementById('dashboard').style.display = 'block';
         document.getElementById('userDisplayName').innerText = user.displayName || user.username;
         document.getElementById('userLogin').innerText = `@${user.username}`;
-        document.getElementById('userAvatarPlaceholder').innerText = user.username.charAt(0).toUpperCase();
+        
+        // Set avatar
+        const avatarContainer = document.getElementById('userAvatarPlaceholder');
+        if (type === 'twitch' && user.profile_image_url) {
+            avatarContainer.innerHTML = `<img src="${user.profile_image_url}" alt="avatar">`;
+        } else {
+            avatarContainer.innerHTML = user.username.charAt(0).toUpperCase();
+            avatarContainer.style.display = 'flex';
+            avatarContainer.style.alignItems = 'center';
+            avatarContainer.style.justifyContent = 'center';
+        }
+        
         const badge = document.getElementById('loggedinBadge');
         if (type === 'twitch') { badge.innerText = 'Logged in with TWITCH'; badge.style.background = '#9146ff20'; badge.style.color = '#9146ff'; }
         else { badge.innerText = 'Custom Account'; badge.style.background = '#ffb34720'; badge.style.color = '#ffb347'; }
+        
         if (isAdmin) {
             document.getElementById('adminBadge').style.display = 'inline-block';
             document.getElementById('adminSection').style.display = 'block';
@@ -433,7 +448,13 @@
             try {
                 localStorage.removeItem('botrix_custom_user');
                 const userData = await fetchTwitchUser(twitchToken);
-                await onLoginSuccess({ id: userData.id, username: userData.login, displayName: userData.display_name, type: 'twitch' }, twitchToken, 'twitch');
+                await onLoginSuccess({ 
+                    id: userData.id, 
+                    username: userData.login, 
+                    displayName: userData.display_name, 
+                    profile_image_url: userData.profile_image_url,
+                    type: 'twitch' 
+                }, twitchToken, 'twitch');
                 window.history.replaceState(null, '', window.location.pathname);
                 return;
             } catch (err) { console.log('Twitch login failed', err); }
